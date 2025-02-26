@@ -1,0 +1,32 @@
+{
+    "id": "snail1",
+    "scenes": [
+        {
+            "type": "video",
+            "url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        },
+        {
+            "type": "image-text",
+            "background": [
+                {
+                    "url": "https://i.imgur.com/GL7igry.png"
+                }
+            ],
+            "chat": false
+        },
+        {
+            "type": "video",
+            "url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        },
+        {
+            "type": "image-text",
+            "background": [
+                {
+                    "url": "https://i.imgur.com/9Zx0eij.jpeg"
+                }
+            ],
+            "chat": true,
+            "systemPrompt": "You are a helpful assistant."
+        }
+    ]
+}

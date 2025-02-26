@@ -1,0 +1,10 @@
+{
+  "scenarios": [
+    {
+      "id": "snail1",
+      "image": "https://i.imgur.com/RqAbziC.jpeg",
+      "name": "Scenario 1",
+      "summary": "To be completed"
+    }
+  ]
+}
