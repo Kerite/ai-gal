@@ -9,7 +9,12 @@
   "conversation": [
     {
       "speaker": "character1",
-      "text": "",
+      "text": "How are you?",
+      "image": ""
+    },
+    {
+      "speaker": "character2",
+      "text": "I'm fine, thank you.",
       "image": ""
     }
   ]

@@ -18,7 +18,7 @@ export function VideoScene({ url }: VideoSceneProps) {
     <div className="w-full h-full">
       <button onClick={() => {
         if (videoRef.current) {
-          videoRef.current.currentTime = videoRef.current.duration - 10;
+          videoRef.current.currentTime = videoRef.current.duration - 2;
         }
       }}>Jump to end</button>
       <video autoPlay onEnded={() => { onSceneFinished(); }} ref={videoRef} >
