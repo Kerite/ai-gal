@@ -1,12 +1,12 @@
-import { Scenario } from "@/lib/configs";
+import { Conversation } from "@/lib/configs";
 import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
 
-export async function loadScenario(scenarioId: string): Promise<Scenario> {
-  console.log("Loading SceloadScenarionario", scenarioId);
-  const file = await readFile(process.cwd() + '/configs/scenarios/' + scenarioId + ".json", 'utf-8');
+export async function loadScenario(conversationId: string): Promise<Conversation> {
+  console.log("Loading conversation:", conversationId);
+  const file = await readFile(process.cwd() + '/configs/conversations/' + conversationId + ".json", 'utf-8');
   const data = JSON.parse(file);
-  console.log("Scenario", scenarioId, "data:", data)
+  console.log("Loaded conversation", conversationId, "data:", data)
 
   return data;
 }

@@ -2,11 +2,9 @@ import { Scenario } from "@/lib/configs";
 import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
 
-export async function loadScenario(scenarioId: string): Promise<Scenario> {
-  console.log("Loading SceloadScenarionario", scenarioId);
-  const file = await readFile(process.cwd() + '/configs/scenarios/' + scenarioId + ".json", 'utf-8');
+export async function loadScenarioList(): Promise<Scenario> {
+  const file = await readFile(process.cwd() + '/configs/scenario.json', 'utf-8');
   const data = JSON.parse(file);
-  console.log("Scenario", scenarioId, "data:", data)
 
   return data;
 }
@@ -15,7 +13,7 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const scenarioId = params.get("id");
   if (scenarioId) {
-    const scenario = await loadScenario(scenarioId);
+    const scenario = await loadScenarioList();
     return Response.json(scenario);
   }
   return Response.json({}, {

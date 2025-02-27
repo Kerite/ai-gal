@@ -25,7 +25,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="bg-[url(../public/bg-home.png)] h-screen w-screen bg-cover bg-center bg-no-repeat flex">
+    <div className="h-screen w-screen bg-cover bg-center bg-no-repeat flex">
       <div id="chat-container" className="flex-row flex left-0 right-0 max-h-screen overflow-hidden">
         <div className="max-w-[565px] max-h-[800px]">
           {/* <Image src={character} alt="character" className="w-[565px] h-[800px]" width={565} height={800} /> */}

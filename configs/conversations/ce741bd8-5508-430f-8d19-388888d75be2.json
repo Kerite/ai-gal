@@ -1,0 +1,16 @@
+{
+  "characters": [
+    {
+      "id": "character1",
+      "name": "",
+      "image": ""
+    }
+  ],
+  "conversation": [
+    {
+      "speaker": "character1",
+      "text": "",
+      "image": ""
+    }
+  ]
+}

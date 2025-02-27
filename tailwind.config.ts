@@ -11,9 +11,6 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-      },
-      backgroundImage: {
-        'bg-home': "url('../public/bg-home.png')"
       }
     },
   },
