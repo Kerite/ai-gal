@@ -13,21 +13,11 @@
         }
       ],
       "chat": false,
-      "conversation": "ce741bd8-5508-430f-8d19-388888d75be2"
+      "conversation": "test"
     },
     {
       "type": "video",
       "url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-    },
-    {
-      "type": "image-text",
-      "background": [
-        {
-          "url": "https://i.imgur.com/9Zx0eij.jpeg"
-        }
-      ],
-      "chat": true,
-      "systemPrompt": "You are a helpful assistant."
     }
   ]
 }

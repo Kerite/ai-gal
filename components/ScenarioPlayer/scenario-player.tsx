@@ -3,7 +3,7 @@ import { useScenario } from "@/lib/scenario-provider";
 import { ImageTextScene } from "../ImageTextScene/image-text-scene";
 import { VideoScene } from "../VideoScene/video-scene";
 import { useEffect, useState } from "react";
-import { Scene } from "@/lib/configs";
+import { Scene } from "@/lib/types";
 
 export default function ScenarioPlayer({ scenarioId }: { scenarioId: string }) {
   const { scenario, currentSceneIndex, loadScenario } = useScenario();
@@ -19,8 +19,11 @@ export default function ScenarioPlayer({ scenarioId }: { scenarioId: string }) {
   }, [currentSceneIndex, scenario])
 
   return (
-    <div>
-      <div>{currentSceneIndex + 1} / {scenario?.scenes.length}</div>
+    <div id="scenario-player" className="w-full h-full flex flex-col">
+      <div>
+        {currentSceneIndex + 1} / {scenario?.scenes.length}
+      </div>
+      <div className="flex-grow"></div>
       {
         currentScene && (
           currentScene.type === "image-text" ?

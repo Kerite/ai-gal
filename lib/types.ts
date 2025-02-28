@@ -19,13 +19,15 @@ export interface ImageTextScene {
 export interface Character {
   id: string;
   name: string;
+  alias: string[];
   image: string;
 }
 
 export type Scene = VideoScene | ImageTextScene;
 
 export interface Conversation {
-  conversation: ConversationContent[];
+  sentences: ConversationContent[];
+  characters: Character[];
 }
 
 export interface ConversationContent {

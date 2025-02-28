@@ -1,0 +1,31 @@
+{
+  "characters": [
+    {
+      "id": "character-1",
+      "name": "Character 1",
+      "alias": [
+        "character-3"
+      ],
+      "image": "https://ai-gal.s3.ap-southeast-1.amazonaws.com/snail1/character-1.png"
+    },
+    {
+      "id": "character-2",
+      "name": "Character 2",
+      "alias": [],
+      "image": "https://ai-gal.s3.ap-southeast-1.amazonaws.com/snail1/character-2.png"
+    },
+    {
+      "id": "character-3",
+      "name": "Character 1",
+      "alias": [
+      ],
+      "image": "https://ai-gal.s3.ap-southeast-1.amazonaws.com/snail1/character-1.png"
+    },
+    {
+      "id": "character-4",
+      "name": "Character 2",
+      "alias": [],
+      "image": "https://ai-gal.s3.ap-southeast-1.amazonaws.com/snail1/character-2.png"
+    }
+  ]
+}

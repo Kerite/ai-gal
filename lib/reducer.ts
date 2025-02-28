@@ -1,4 +1,4 @@
-import { Scenario } from "./configs";
+import { Scenario } from "./types";
 
 export interface ScenarioState {
   scenario?: Scenario;

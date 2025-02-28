@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, ReactNode, useMemo, useCallback, useReducer } from "react";
-import { Scenario } from "./configs";
+import { Scenario } from "./types";
 import { scenarioReducer } from "./reducer";
 
 export interface ScenarioState {

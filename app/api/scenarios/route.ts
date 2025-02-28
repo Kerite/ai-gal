@@ -1,4 +1,4 @@
-import { Scenario } from "@/lib/configs";
+import { Scenario } from "@/lib/types";
 import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
 
