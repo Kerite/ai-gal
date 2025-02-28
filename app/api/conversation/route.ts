@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
 import { extractConversation } from "@/lib/conversation-utils";
 
-export async function loadConversation(conversationId: string): Promise<Conversation> {
+async function loadConversation(conversationId: string): Promise<Conversation> {
   console.log("Loading conversation:", conversationId);
 
   if (conversationId === "test") {
