@@ -1,10 +1,11 @@
 import { Scenario } from "@/lib/types";
 import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
+import path from "path";
 
 async function loadScenario(scenarioId: string): Promise<Scenario> {
   console.log("Loading SceloadScenarionario", scenarioId);
-  const file = await readFile(process.cwd() + '/configs/scenarios/' + scenarioId + ".json", 'utf-8');
+  const file = await readFile(path.resolve(process.cwd(), 'configs/scenarios', `${scenarioId}.json`), 'utf-8');
   const data = JSON.parse(file);
   console.log("Scenario", scenarioId, "data:", data)
 

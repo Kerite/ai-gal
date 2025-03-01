@@ -1,9 +1,10 @@
 import { Scenario } from "@/lib/types";
 import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
+import path from "path";
 
 async function loadScenarioList(): Promise<Scenario> {
-  const file = await readFile(process.cwd() + '/configs/scenario.json', 'utf-8');
+  const file = await readFile(path.resolve(process.cwd(), 'configs/scenario.json'), 'utf-8');
   const data = JSON.parse(file);
 
   return data;

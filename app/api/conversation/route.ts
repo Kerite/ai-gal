@@ -2,6 +2,7 @@ import { Conversation } from "@/lib/types";
 import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
 import { extractConversation } from "@/lib/conversation-utils";
+import path from "path";
 
 async function loadConversation(conversationId: string): Promise<Conversation> {
   console.log("Loading conversation:", conversationId);
@@ -13,7 +14,7 @@ async function loadConversation(conversationId: string): Promise<Conversation> {
     console.log("Loaded conversation", conversationId, "data:", data);
     return data;
   } else {
-    const file = await readFile(process.cwd() + '/configs/conversations/' + conversationId + ".json", 'utf-8');
+    const file = await readFile(path.resolve(process.cwd(), 'configs/conversations', `${conversationId}.json`), 'utf-8');
     const data = JSON.parse(file);
     console.log("Loaded conversation", conversationId, "data:", data);
     return data;

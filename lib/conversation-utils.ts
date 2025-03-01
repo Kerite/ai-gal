@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import { Character, Conversation, ConversationContent } from "./types";
+import path from "path";
 
 export async function extractConversation(text: string, split: string | RegExp = /[:：]/): Promise<Conversation> {
   const conversation: ConversationContent[] = [];
@@ -35,7 +36,7 @@ export async function extractConversation(text: string, split: string | RegExp =
     conversation.push(currentConversation);
   }
 
-  const characterJson = await readFile(process.cwd() + "/configs/character.json", "utf-8");
+  const characterJson = await readFile(path.resolve(process.cwd(), "configs/character.json"), "utf-8");
   const characterData = JSON.parse(characterJson) as {
     characters: Character[]
   };
