@@ -1,8 +1,6 @@
-import { readFile } from "fs/promises";
-import { Character, Conversation, ConversationContent } from "./types";
-import path from "path";
+import { ConversationContent } from "./types";
 
-export async function extractConversation(text: string, split: string | RegExp = /[:：]/): Promise<Conversation> {
+export async function extractConversation(text: string, split: string | RegExp = /[:：]/): Promise<ConversationContent[]> {
   const conversation: ConversationContent[] = [];
   let currentConversation: ConversationContent | null = null;
 
@@ -21,14 +19,14 @@ export async function extractConversation(text: string, split: string | RegExp =
       }
       currentConversation = {
         speaker: speaker.trim().replace(/^"|"$/g, ""),
-        text: content.trim().replace(/^"|"$/g, ""),
+        content: content.trim().replace(/^"|"$/g, ""),
       }
     } else if (currentConversation) {
-      currentConversation.text += "\n" + trimmedLine;
+      currentConversation.content += "\n" + trimmedLine;
     } else {
       currentConversation = {
         speaker: "ERROR",
-        text: trimmedLine,
+        content: trimmedLine,
       }
     }
   });
@@ -36,26 +34,5 @@ export async function extractConversation(text: string, split: string | RegExp =
     conversation.push(currentConversation);
   }
 
-  const characterJson = await readFile(path.resolve(process.cwd(), "configs/character.json"), "utf-8");
-  const characterData = JSON.parse(characterJson) as {
-    characters: Character[]
-  };
-
-  const characterSet = new Set<string>();
-  conversation.forEach(conversation => {
-    characterSet.add(conversation.speaker);
-  });
-  const characters = [...characterSet].map((character, index) => ({
-    id: "character-" + index,
-    alias: [],
-    name: character,
-  }));
-
-  return {
-    characters: characterData.characters,
-    sentences: conversation.map((conversationItem) => ({
-      ...conversationItem,
-      speaker: characters.find(character => character.name === conversationItem.speaker)?.id || conversationItem.speaker,
-    })),
-  };
+  return conversation;
 };

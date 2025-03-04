@@ -7,7 +7,7 @@ export interface ScenarioSummary {
 
 export interface Scenario {
   id: string;
-  scenes: (VideoScene | ImageTextScene)[]
+  scenes: Scene[]
 }
 
 export interface VideoScene {
@@ -23,6 +23,8 @@ export interface ImageTextScene {
   systemPrompt?: string;
 }
 
+export type Scene = VideoScene | ImageTextScene;
+
 export interface Character {
   id: string;
   name: string;
@@ -30,7 +32,6 @@ export interface Character {
   image: string;
 }
 
-export type Scene = VideoScene | ImageTextScene;
 
 export interface Conversation {
   sentences: ConversationContent[];
@@ -39,6 +40,6 @@ export interface Conversation {
 
 export interface ConversationContent {
   speaker: string;
-  text: string;
-  image?: string;
+  content: string;
+  image_override?: string;
 }

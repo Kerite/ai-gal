@@ -102,7 +102,7 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
   }
 
   return (
-    <div className="image-text-scene flex flex-row">
+    <div className={`image-text-scene flex flex-row  bg-url(${scene.background[0] ?? ""})`}>
       <div id="left-character" className="w-[30rem] h-[48rem] flex-grow-0">
         {
           state.leftImageUrl === "" ?
@@ -113,7 +113,7 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
             </div>
         }
       </div>
-      <div className={`w-[34rem] bg-url(${scene.background[0]?.url ?? ""})`} onClick={() => { nextSentence() }}>
+      <div className={`w-[34rem]`} onClick={() => { nextSentence() }}>
         <div className="border-2 border-black">
           {
             state.conversation.characters.find(character => {
@@ -122,7 +122,7 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
           }
         </div>
         <div className="border-2 border-black">
-          {getCurrentConversation()?.text}
+          {getCurrentConversation()?.content}
         </div>
       </div>
       <div id="right-character" className="w-[20rem] h-[48rem] flex-grow-0">

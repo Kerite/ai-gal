@@ -1,24 +1,25 @@
-import { Conversation } from "@/lib/types";
+import { Conversation, ConversationContent } from "@/lib/types";
 import { NextRequest } from "next/server";
-import { readFile } from "fs/promises";
-import { extractConversation } from "@/lib/conversation-utils";
-import path from "path";
+import { hashIds, loadCharacterMapping, loadConversationForScene } from "@/lib/db";
 
-async function loadConversation(conversationId: string): Promise<Conversation> {
-  console.log("Loading conversation:", conversationId);
+async function loadConversation(sceneId: string): Promise<Conversation> {
+  const realSceneId = Number(hashIds.decode(sceneId)[0]?.valueOf());
+  console.log("Loading conversation for scene", realSceneId);
 
-  if (conversationId === "test") {
-    const testConversation = await fetch(process.env.TEST_CONVERSATION_URL!);
-    const text = await testConversation.text();
-    const data = await extractConversation(text);
-    console.log("Loaded conversation", conversationId, "data:", data);
-    return data;
-  } else {
-    const file = await readFile(path.resolve(process.cwd(), 'configs/conversations', `${conversationId}.json`), 'utf-8');
-    const data = JSON.parse(file);
-    console.log("Loaded conversation", conversationId, "data:", data);
-    return data;
-  }
+  const conversation = await loadConversationForScene(realSceneId);
+  const characterMapping = await loadCharacterMapping(realSceneId);
+
+  return {
+    characters: Object.values(characterMapping),
+    sentences: conversation.map((chat): ConversationContent => {
+      console.log("Speaker", chat.speaker);
+      return {
+        speaker: characterMapping[chat.speaker].id ?? chat.speaker,
+        content: chat.content,
+        image_override: chat.image_override
+      }
+    }),
+  };
 }
 
 export async function GET(request: NextRequest) {

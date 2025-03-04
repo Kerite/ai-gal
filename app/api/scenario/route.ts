@@ -1,22 +1,21 @@
 import { Scenario } from "@/lib/types";
 import { NextRequest } from "next/server";
-import { readFile } from "fs/promises";
-import path from "path";
+import { loadScenesForScenario, hashIds } from "@/lib/db";
 
-async function loadScenario(scenarioId: string): Promise<Scenario> {
-  console.log("Loading SceloadScenarionario", scenarioId);
-  const file = await readFile(path.resolve(process.cwd(), 'configs/scenarios', `${scenarioId}.json`), 'utf-8');
-  const data = JSON.parse(file);
-  console.log("Scenario", scenarioId, "data:", data)
-
-  return data;
+async function getScenario(scenarioId: string): Promise<Scenario> {
+  const scenes = await loadScenesForScenario(Number(hashIds.decode(scenarioId)[0].valueOf()));
+  console.log("Scenes for id", scenarioId, scenes);
+  return {
+    id: scenarioId,
+    scenes: scenes,
+  };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response> {
   const params = request.nextUrl.searchParams;
   const scenarioId = params.get("id");
   if (scenarioId) {
-    const scenario = await loadScenario(scenarioId);
+    const scenario = await getScenario(scenarioId);
     return Response.json(scenario);
   }
   return Response.json({}, {
