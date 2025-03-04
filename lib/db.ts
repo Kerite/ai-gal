@@ -2,7 +2,7 @@
 
 import postgres from "postgres";
 import { Scene } from "./types";
-const sql = postgres(process.env.DATABASE_URL!, { ssl: 'verify-full' });
+const sql = postgres(process.env.DATABASE_DATABASE_URL!, { ssl: 'verify-full' });
 
 const loadScenarioList = async () => {
   const scenariosPromise = sql`SELECT id, image, name, description FROM scenarios`;
