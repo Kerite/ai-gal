@@ -1,13 +1,24 @@
 "use client"
-import scenarios from "@/configs/scenario.json"
+import { ScenarioSummary } from "@/lib/types";
 import Image from "next/image"
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function SceneSelector() {
+  const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
+  useEffect(() => {
+    const fetchScenarios = async () => {
+      const scenarios = await fetch("/api/scenarios", {
+        method: "GET"
+      }).then(res => res.json());
+      setScenarios(scenarios);
+    }
+    fetchScenarios();
+  }, []);
   return (
     <div className="flex">
       {
-        scenarios.scenarios?.map(scenario => {
+        scenarios.map(scenario => {
           return (
             <div key={scenario.id}>
               <Link href={`/scenario/${scenario.id}`} className="relative flex flex-col">

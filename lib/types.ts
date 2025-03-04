@@ -1,3 +1,10 @@
+export interface ScenarioSummary {
+  id: string;
+  image: string;
+  name: string;
+  description: string;
+}
+
 export interface Scenario {
   id: string;
   scenes: (VideoScene | ImageTextScene)[]
