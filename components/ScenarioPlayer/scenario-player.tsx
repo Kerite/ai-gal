@@ -9,10 +9,12 @@ import Chat from "../Chat/chat";
 export default function ScenarioPlayer({ scenarioId }: { scenarioId: string }) {
   const { scenario, currentSceneIndex, loadScenario } = useScenario();
   const [currentScene, setCurrentScene] = useState<Scene>();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("Loading scenario", scenarioId)
-    loadScenario(scenarioId);
+    console.log("Loading scenario", scenarioId);
+    setLoading(true);
+    loadScenario(scenarioId).then(() => { setLoading(false) });
   }, [scenarioId, loadScenario])
 
   useEffect(() => {
@@ -26,7 +28,10 @@ export default function ScenarioPlayer({ scenarioId }: { scenarioId: string }) {
   return (
     <div id="scenario-player" className="w-full h-full flex flex-col">
       {
-        currentSceneIndex === scenario?.scenes.length && <span>Finished</span>
+        loading && <span>Loading...</span>
+      }
+      {
+        !loading && scenario?.scenes.length == currentSceneIndex && <span>Finished</span>
       }
       {
         currentScene && (
