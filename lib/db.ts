@@ -60,23 +60,45 @@ const loadScenesForScenario = async (scenarioId: number): Promise<Scene[]> => {
       s.id ASC
   `;
   console.log("Scenes for scenario", scenarioId, scenes);
-  return scenes.map((scene): Scene => {
+  return Promise.all(scenes.map(async (scene): Promise<Scene> => {
     if (scene.type === "video") {
       return {
+        id: hashIds.encode(scene.id),
         type: "video",
         url: scene.background[0],
       };
     } else if (scene.type === "image-text") {
+      const chats = await sql`
+        SELECT
+          sc.id, c.id AS chaid, c.alias, c.name, c.image
+        FROM
+          scene_character AS sc
+        LEFT JOIN
+          characters AS c ON sc.character_id = c.id
+        WHERE
+          sc.scene_id = ${scene.id}  
+      `;
       return {
+        id: hashIds.encode(scene.id),
         type: "image-text",
         background: scene.background,
-        chat: scene.chat,
-        conversation: hashIds.encode(scene.id)
+        chats: scene.chat ? [
+          ...chats.map(chat => ({
+            id: hashIds.encode(chat.id),
+            character: {
+              id: hashIds.encode(chat.chaid),
+              name: chat.name,
+              alias: chat.alias,
+              image: chat.image,
+            },
+          }))
+        ] : [],
+        conversation: hashIds.encode(scene.id),
       }
     } else {
       throw new Error(`Unknown scene type: ${scene.type}`);
     }
-  });
+  }));
 }
 
 const loadConversationForScene = async (sceneId: number): Promise<ConversationContent[]> => {
@@ -109,7 +131,7 @@ const loadConversationForScene = async (sceneId: number): Promise<ConversationCo
       c.image_override,
       c.content
     FROM
-      chats AS c
+      conversations AS c
     WHERE
       scene = ${sceneId}
   `;
@@ -121,4 +143,40 @@ const loadConversationForScene = async (sceneId: number): Promise<ConversationCo
   }));
 }
 
-export { loadScenarioList, loadScenesForScenario, loadConversationForScene, loadCharacterMapping, hashIds };
+const loadChatForChatId = async (chatId: number): Promise<{
+  modelApi: string,
+  modelApiToken: string,
+  modelName: string,
+  modelPrompt: string,
+  chatConfig: object,
+}> => {
+  const chat = await sql`
+    SELECT
+      m.name, m.api_url, m.api_key, m.name, sc.chat_prompt, sc.chat_config
+    FROM
+      scene_character AS sc
+    LEFT JOIN
+      models AS m ON sc.model_id = m.id
+    WHERE
+      sc.id = ${Number(chatId.valueOf())}
+    `
+  if (chat.length === 0) {
+    throw new Error(`Chat ID ${chat} not found`);
+  }
+  return {
+    modelApi: chat[0].api_url,
+    modelApiToken: chat[0].api_key,
+    modelName: chat[0].name,
+    modelPrompt: chat[0].chat_prompt,
+    chatConfig: chat[0].chat_config,
+  }
+}
+
+export {
+  hashIds,
+  loadScenarioList,
+  loadScenesForScenario,
+  loadConversationForScene,
+  loadCharacterMapping,
+  loadChatForChatId,
+};

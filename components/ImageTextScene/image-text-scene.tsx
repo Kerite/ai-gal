@@ -1,10 +1,12 @@
 "use client";
-import { Conversation, ConversationContent, ImageTextScene as ImageTextSceneDef } from "@/lib/types";
-import { useScenario } from "@/lib/scenario-provider";
-import Image from "next/image";
 import { useCallback, useEffect, useReducer } from "react";
+import Image, { getImageProps } from "next/image";
+import { getBackgroundImage } from "@/lib/helper";
+import { useScenario } from "@/lib/scenario-provider";
+import { Conversation, ConversationContent, ImageTextScene as ImageTextSceneDef } from "@/lib/types";
 
 interface ImageTextSceneState {
+  backgroundImage: string;
   leftImageUrl: string;
   rightImageUrl: string;
   currentImage: "none" | "left" | "right";
@@ -38,12 +40,17 @@ function imageTextSceneReducer(state: ImageTextSceneState, action: ImageTextScen
               return x.id === state.conversation.sentences[state.currentSentenceIndex + 1]?.speaker
             })?.image ?? "" : state.rightImageUrl,
           };
-          console.log("New State:", newState);
+          // console.log("New State:", newState);
           return newState;
         }
       }
     case "REFRESH_SCENE":
       const newState: ImageTextSceneState = {
+        backgroundImage: getBackgroundImage(getImageProps({
+          src: action.scene.background[0] ?? "",
+          fill: true,
+          alt: "Background Image"
+        }).props.srcSet),
         currentSentenceIndex: 0,
         currentSentence: action.conversation.sentences[0],
         currentImage: "left",
@@ -54,13 +61,19 @@ function imageTextSceneReducer(state: ImageTextSceneState, action: ImageTextScen
         rightImageUrl: "",
         finished: false,
       };
-      console.log("New State:", newState);
+      // console.log("New State:", newState);
       return newState;
   }
 }
 
 export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
   const [state, dispatch] = useReducer(imageTextSceneReducer, {
+    backgroundImage: getBackgroundImage(getImageProps({
+      src: scene.background[0] ?? "",
+      width: 1920,
+      height: 1080,
+      alt: "Background Image"
+    }).props.srcSet),
     currentImage: "none",
     leftImageUrl: "",
     rightImageUrl: "",
@@ -72,8 +85,6 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
     finished: false,
   });
   const { nextScene } = useScenario();
-
-  console.log("Scene:", scene);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,38 +113,42 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
   }
 
   return (
-    <div className={`image-text-scene flex flex-row  bg-url(${scene.background[0] ?? ""})`}>
-      <div id="left-character" className="w-[30rem] h-[48rem] flex-grow-0">
-        {
-          state.leftImageUrl === "" ?
-            <div></div>
-            :
-            <div className={state.currentImage === "left" ? "border-2 border-black" : ""}>
-              <Image src={state.leftImageUrl} width={400} height={600} alt="Left Character" />
-            </div>
-        }
-      </div>
-      <div className={`w-[34rem]`} onClick={() => { nextSentence() }}>
-        <div className="border-2 border-black">
+    <div className={`image-text-scene w-full h-full flex flex-col-reverse bg-cover`} style={{
+      backgroundImage: state.backgroundImage
+    }}>
+      <div className="flex flex-row mx-auto">
+        <div className="w-[20rem] flex-grow-0 mt-auto mb-10" id="left-character">
           {
-            state.conversation.characters.find(character => {
-              return character.id === (state.currentSentence ?? { speaker: "" }).speaker
-            })?.name ?? state.currentSentence?.speaker ?? "No Name"
+            state.leftImageUrl === "" ?
+              <div></div>
+              :
+              <div className={state.currentImage === "left" ? "border-2 border-black" : ""}>
+                <Image src={state.leftImageUrl} width={400} height={600} alt="Left Character" />
+              </div>
           }
         </div>
-        <div className="border-2 border-black">
-          {getCurrentConversation()?.content}
+        <div className={`w-[34rem] mt-auto p-10`} onClick={() => { nextSentence() }}>
+          <div className="border-1 border-black bg-slate-400 p-1 select-none">
+            {
+              state.conversation.characters.find(character => {
+                return character.id === (state.currentSentence ?? { speaker: "" }).speaker
+              })?.name ?? state.currentSentence?.speaker ?? "No Name"
+            }
+          </div>
+          <div className="border-1 border-black bg-slate-300 p-3 select-none">
+            {getCurrentConversation()?.content}
+          </div>
         </div>
-      </div>
-      <div id="right-character" className="w-[20rem] h-[48rem] flex-grow-0">
-        {
-          state.rightImageUrl === "" ?
-            <div></div>
-            :
-            <div className={state.currentImage === "right" ? "border-2 border-black" : ""}>
-              <Image src={state.rightImageUrl} width={400} height={600} alt="Right Character" />
-            </div>
-        }
+        <div className="w-[20rem] flex-grow-0 mt-auto mb-10" id="right-character">
+          {
+            state.rightImageUrl === "" ?
+              <div></div>
+              :
+              <div className={state.currentImage === "right" ? "border-2 border-black" : ""}>
+                <Image src={state.rightImageUrl} width={400} height={600} alt="Right Character" />
+              </div>
+          }
+        </div>
       </div>
     </div>
   )

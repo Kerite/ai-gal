@@ -1,12 +1,7 @@
 "use client";
 import React, { createContext, useContext, ReactNode, useMemo, useCallback, useReducer } from "react";
 import { Scenario } from "./types";
-import { scenarioReducer } from "./reducer";
-
-export interface ScenarioState {
-  scenario?: Scenario;
-  currentSceneIndex: number;
-}
+import { scenarioReducer, ScenarioState } from "./reducer";
 
 const emptyScenario: Scenario = {
   id: "",

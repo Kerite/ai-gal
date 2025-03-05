@@ -10,15 +10,24 @@ export interface Scenario {
   scenes: Scene[]
 }
 
+export interface AiChat {
+  // For sending message to /api/chat
+  id: string;
+  // For displaying the character
+  character: Character;
+}
+
 export interface VideoScene {
+  id: string;
   type: "video";
   url: string;
 }
 
 export interface ImageTextScene {
+  id: string;
   type: "image-text";
-  background: { url: string }[];
-  chat: boolean;
+  background: string[];
+  chats: AiChat[];
   conversation?: string;
   systemPrompt?: string;
 }
@@ -31,7 +40,6 @@ export interface Character {
   alias: string[];
   image: string;
 }
-
 
 export interface Conversation {
   sentences: ConversationContent[];

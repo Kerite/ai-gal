@@ -1,8 +1,9 @@
-import { Scenario } from "./types";
+import { Scenario, Scene } from "./types";
 
 export interface ScenarioState {
   scenario?: Scenario;
   currentSceneIndex: number;
+  currentScene?: Scene;
 }
 
 type ScenarioAction = { type: "NEW_SCENARIO", scenario: Scenario }
@@ -18,28 +19,33 @@ export const scenarioReducer = (state: ScenarioState, action: ScenarioAction): S
         ...state,
         scenario: action.scenario,
         currentSceneIndex: action.currentSceneIndex,
+        currentScene: action.scenario.scenes[action.currentSceneIndex],
       }
     case "NEXT_SCENE":
       return {
         ...state,
         currentSceneIndex: state.currentSceneIndex + 1,
+        currentScene: state.scenario?.scenes[state.currentSceneIndex + 1]
       }
     case "NEW_SCENARIO":
       return {
         ...state,
         scenario: action.scenario,
         currentSceneIndex: 0,
+        currentScene: action.scenario.scenes[0]
       }
     case "JUMP_TO_SCENE":
       return {
         ...state,
-        currentSceneIndex: action.sceneIndex
+        currentSceneIndex: action.sceneIndex,
+        currentScene: state.scenario?.scenes[action.sceneIndex]
       }
     case "LOAD_ERROR":
       return {
         ...state,
         scenario: undefined,
         currentSceneIndex: -1,
+        currentScene: undefined
       }
   }
 }

@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "ai-gal.s3.ap-southeast-1.amazonaws.com"
+      },
+      {
+        protocol: "https",
+        hostname: "*"
       }
     ]
   }

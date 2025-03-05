@@ -1,6 +1,6 @@
 "use client";
-import { useScenario } from "@/lib/scenario-provider";
 import { useRef } from "react";
+import { useScenario } from "@/lib/scenario-provider";
 
 export interface VideoSceneProps {
   url: string;
@@ -16,14 +16,14 @@ export function VideoScene({ url }: VideoSceneProps) {
 
   return (
     <div className="w-full h-full">
+      <video autoPlay onEnded={() => { onSceneFinished(); }} ref={videoRef} >
+        <source src={url} />
+      </video>
       <button onClick={() => {
         if (videoRef.current) {
           videoRef.current.currentTime = videoRef.current.duration;
         }
-      }}>Jump to end</button>
-      <video autoPlay onEnded={() => { onSceneFinished(); }} ref={videoRef} >
-        <source src={url} />
-      </video>
+      }}>Skip</button>
     </div>
   )
 }
