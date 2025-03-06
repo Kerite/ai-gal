@@ -12,7 +12,7 @@ import { ApiChatResponse, ImageTextScene } from "@/lib/types";
 import { useScenario } from "@/lib/scenario-provider";
 
 export default function Chat({ currentScene }: { currentScene: ImageTextScene }) {
-  const { nextScene } = useScenario();
+  const { nextScene, jumpToScene } = useScenario();
   const [showMoreRecords, setShowMoreRecords] = useState(false);
   const [lastMessage, setLastMessage] = useState("");
   const [records, setRecords] = useState<ChatRecord[]>([]);
@@ -35,6 +35,18 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
     console.log(`User sent: ${message}`);
     const { data }: ApiChatResponse = await response.json();
     console.log(data);
+    if (data.actions[0].startsWith("jump-scene")) {
+      const targetScene = data.actions[0].split(" ")[1];
+      console.log("[action] Jump to scene:", targetScene);
+      jumpToScene(Number(targetScene));
+      return;
+    } else if (data.actions[0].startsWith("next-scene")) {
+      console.log("[action] Next scene");
+      nextScene();
+      return;
+    } else if (data.actions[0].startsWith("")) {
+      
+    }
     setRecords([
       ...records,
       { speaker: "user", message },

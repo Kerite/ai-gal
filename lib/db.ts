@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { Character, ConversationContent, Scene } from "./types";
+import { Character, ConversationContent, Scene, SceneObjective } from "./types";
 import Hashids from "hashids";
 import { extractConversation } from "./conversation-utils";
 const sql = postgres(process.env.DATABASE_DATABASE_URL!, { ssl: 'verify-full' });
@@ -169,24 +169,30 @@ const loadConversationForScene = async (sceneId: number): Promise<ConversationCo
   }));
 }
 
+/**
+ * Get chat info for a given chat ID
+ * @param chatId scene_character.id
+ * @returns 
+ */
 const loadChatForChatId = async (chatId: number): Promise<{
   modelApi: string,
   modelApiToken: string,
   modelName: string,
   modelPrompt: string,
   characterId: string,
+  sceneId: number,
   chatConfig: object,
 }> => {
   const chat = await sql`
     SELECT
-      m.name, m.api_url, m.api_key, m.name, sc.chat_prompt, sc.chat_config, sc,character_id
+      m.name, m.api_url, m.api_key, m.name, sc.chat_prompt, sc.chat_config, sc.character_id, sc.scene_id
     FROM
       scene_character AS sc
     LEFT JOIN
       models AS m ON sc.model_id = m.id
     WHERE
       sc.id = ${Number(chatId.valueOf())}
-    `
+    `;
   if (chat.length === 0) {
     throw new Error(`Chat ID ${chat} not found`);
   }
@@ -196,12 +202,39 @@ const loadChatForChatId = async (chatId: number): Promise<{
     modelName: chat[0].name,
     modelPrompt: chat[0].chat_prompt,
     characterId: hashIds.encode(chat[0].character_id),
+    sceneId: chat[0].scene_id,
     chatConfig: chat[0].chat_config,
   }
 }
 
+const loadObjectiveForScene = async (sceneId: number): Promise<SceneObjective[]> => {
+  console.log("Loading objectives for scene", sceneId);
+  const objectives = await sql`
+    SELECT
+      id, description, trigger_regex, actions, reply
+    FROM
+      objectives
+    WHERE
+      scene_id = ${sceneId}
+  `
+  if (objectives.length === 0) {
+    console.log("No objectives found for scene", sceneId);
+  } else {
+    console.log("Objectives found for scene", sceneId, objectives);
+  }
+
+  return objectives.map(objective => ({
+    id: hashIds.encode(objective.id),
+    description: objective.description,
+    triggerExpression: objective.trigger_regex,
+    actions: objective.actions,
+    reply: objective.reply,
+  }));
+}
+
 export {
   hashIds,
+  loadObjectiveForScene,
   loadScenarioList,
   loadScenesForScenario,
   loadConversationForScene,
