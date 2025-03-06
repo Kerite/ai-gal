@@ -12,7 +12,10 @@ function truncate(q: string) {
   return q.substring(0, 10) + len + q.substring(len - 10, len);
 }
 
-async function callOpenAiApi(chatId: string, message: string): Promise<string> {
+async function callOpenAiApi(chatId: string, message: string): Promise<{
+  characterId: string;
+  aiMessage: string;
+}> {
   if (!hashIds.isValidId(chatId)) {
     throw new Error(`Invalid chat ID: ${chatId}`);
   }
@@ -24,6 +27,7 @@ async function callOpenAiApi(chatId: string, message: string): Promise<string> {
   const headers = new Headers();
   headers.set("Content-Type", "application/json");
   headers.set("Authorization", `Bearer ${chatInfo.modelApiToken}`);
+  const apiUrl = `${chatInfo.modelApi}/v1/chat/completions`;
   const apiBody = JSON.stringify({
     ...chatInfo.chatConfig,
     model: chatInfo.modelName,
@@ -38,9 +42,10 @@ async function callOpenAiApi(chatId: string, message: string): Promise<string> {
       }
     ]
   });
+  console.log("Chat info", chatInfo)
   console.log("Apibody", apiBody);
 
-  const reply = await fetch(`${chatInfo.modelApi}/v1/chat/completions`, {
+  const reply = await fetch(apiUrl, {
     method: 'POST',
     headers: headers,
     body: apiBody,
@@ -51,7 +56,10 @@ async function callOpenAiApi(chatId: string, message: string): Promise<string> {
   const replyContent = await reply.json();
 
   console.log(`Reply(${reply.status}):`, JSON.stringify(replyContent.choices[0].message), null, 2);
-  return replyContent.choices[0].message.content;
+  return {
+    characterId: chatInfo.characterId,
+    aiMessage: replyContent.choices[0].message.content
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -59,11 +67,11 @@ export async function POST(request: NextRequest) {
 
   console.log("User sent:", message);
 
-  const reply = await callOpenAiApi(chatId, message);
-  const response = reply.substring(reply.indexOf("</think>") + 8).trim()
+  const { characterId, aiMessage } = await callOpenAiApi(chatId, message);
+  const response = message.indexOf("</think>") > 0 ? message.substring(message.indexOf("</think>") + 8).trim()
     .replaceAll(/\(.*?\)/g, '')
     .replaceAll(/（.*?）/g, '')
-    .replaceAll("\n", "<br>");
+    .replaceAll("\n", "<br>") : aiMessage;
 
   console.log(`AI response: ${response}`);
   const salt = crypto.randomUUID();
@@ -98,6 +106,7 @@ export async function POST(request: NextRequest) {
   return Response.json({
     message: "success",
     data: {
+      characterId,
       reply: response.replaceAll("<br>", "\n"),
       translation: translatedText.replaceAll("<br>", "\n"),
     }

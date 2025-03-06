@@ -22,7 +22,7 @@ export default function ScenarioPlayer({ scenarioId }: { scenarioId: string }) {
   }, [currentSceneIndex, scenario])
 
   useEffect(() => {
-    console.log("Current Scene", currentSceneIndex, "/", scenario?.scenes.length, currentScene)
+    console.log("Current Scene", currentSceneIndex + 1, "/", scenario?.scenes.length, currentScene)
   }, [currentSceneIndex, scenario, currentScene])
 
   return (

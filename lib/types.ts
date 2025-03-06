@@ -27,6 +27,9 @@ export interface ImageTextScene {
   id: string;
   type: "image-text";
   background: string[];
+  characters: {
+    [characterId: string]: Character;
+  };
   chats: AiChat[];
   conversation?: string;
   systemPrompt?: string;
@@ -50,4 +53,12 @@ export interface ConversationContent {
   speaker: string;
   content: string;
   image_override?: string;
+}
+
+export interface ApiChatResponse {
+  data: {
+    characterId: string;
+    reply: string;
+    translation: string;
+  }
 }

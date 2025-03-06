@@ -1,14 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image, { getImageProps } from "next/image";
+import { AnimatePresence, motion } from "motion/react";
+
+import ChatRecords, { ChatRecord } from "@/components/ChatRecords/chat-records";
 import { MessageInput } from "@/components/MessageInput/message-input";
 import { LastSendMessageBox } from "@/components/LastSendMessageBox/last-send-message-box";
 import { ReplyMessageBox } from "@/components/ReplyMessageBox/reply-message-box";
 import { getBackgroundImage } from "@/lib/helper";
-import { ImageTextScene } from "@/lib/types";
+import { ApiChatResponse, ImageTextScene } from "@/lib/types";
+import { useScenario } from "@/lib/scenario-provider";
 
 export default function Chat({ currentScene }: { currentScene: ImageTextScene }) {
+  const { nextScene } = useScenario();
+  const [showMoreRecords, setShowMoreRecords] = useState(false);
   const [lastMessage, setLastMessage] = useState("");
+  const [records, setRecords] = useState<ChatRecord[]>([]);
   const [lastReply, setLastReply] = useState({
     reply: "",
     translation: ""
@@ -17,6 +24,7 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
   const handleSendMessage = async (message: string) => {
     setLastMessage(message);
     setLastReply({ reply: "(考え...)", translation: "(Thinking...)" });
+    setRecords([...records,]);
     const response = await fetch("/api/chat", {
       method: "POST",
       body: JSON.stringify({
@@ -25,10 +33,21 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
       })
     });
     console.log(`User sent: ${message}`);
-    const data = await response.json();
+    const { data }: ApiChatResponse = await response.json();
     console.log(data);
-    setLastReply(data.data);
+    setRecords([
+      ...records,
+      { speaker: "user", message },
+      { speaker: data.characterId, message: data.reply }
+    ]);
+    setLastReply(data);
   }
+
+  useEffect(() => {
+    if (records.length > 5) {
+      nextScene();
+    }
+  }, [records, nextScene]);
 
   return (
     <div className="h-full w-full bg-cover bg-center bg-no-repeat flex" style={{
@@ -49,9 +68,31 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
         </div>
         <div id="right-container" className="space-y-[40px] flex flex-col h-[calc(100vh-80px)] max-w-[794px]">
           <div className="flex-grow">
-            <ReplyMessageBox reply={lastReply} characterId="zhenxiao" />
+            {
+              !showMoreRecords && <ReplyMessageBox reply={lastReply} characterId={currentScene.chats[0].character.id} />
+            }
           </div>
-          <LastSendMessageBox message={lastMessage} className="mr-0 ml-auto flex" />
+          <div className="flex w-full">
+            <button onClick={() => {
+              setShowMoreRecords(!showMoreRecords);
+            }} className="ml-auto w-[122px] h-[34px] rounded-[50px] bg-[rgba(255,255,255,0.7)]">
+              <span className="font-normal text-[#666666] text-[16px]">More&nbsp;Records</span>
+            </button>
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={showMoreRecords ? "records" : "lastMessage"}
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              exit={{ opacity: 0, scaleY: 0 }}
+              transition={{ duration: 0.2 }}>
+              {
+                showMoreRecords ?
+                  <ChatRecords records={records} characters={currentScene.characters} /> :
+                  <LastSendMessageBox message={lastMessage} className="mr-0 ml-auto flex" />
+              }
+            </motion.div>
+          </AnimatePresence>
           <MessageInput onSend={(message) => handleSendMessage(message)} />
         </div>
       </div>

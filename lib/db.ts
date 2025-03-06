@@ -9,7 +9,7 @@ interface CharacterMapping {
   [conversationDisplayedName: string]: Character;
 }
 
-const loadCharacterMapping = async (sceneId: number): Promise<CharacterMapping> => {
+const loadCharacterNameMapping = async (sceneId: number): Promise<CharacterMapping> => {
   const sceneCharacters = await sql`
     SELECT
       sc.name AS scene_character_name, sc.character_id, c.name, c.alias, c.image
@@ -24,6 +24,31 @@ const loadCharacterMapping = async (sceneId: number): Promise<CharacterMapping> 
   const characterMapping: CharacterMapping = {};
   sceneCharacters.forEach(character => {
     characterMapping[character.scene_character_name] = {
+      id: hashIds.encode(character.character_id),
+      name: character.name,
+      alias: character.alias,
+      image: character.image
+    };
+  });
+  console.log("Character mapping", characterMapping);
+  return characterMapping;
+}
+
+const loadCharacterIdMapping = async (sceneId: number): Promise<CharacterMapping> => {
+  const sceneCharacters = await sql`
+    SELECT
+      sc.name AS scene_character_name, sc.character_id, c.name, c.alias, c.image
+    FROM
+      scene_character AS sc
+    LEFT JOIN
+      characters AS c
+    ON
+      sc.character_id = c.id
+    WHERE
+      scene_id = ${sceneId}`;
+  const characterMapping: CharacterMapping = {};
+  sceneCharacters.forEach(character => {
+    characterMapping[hashIds.encode(character.character_id)] = {
       id: hashIds.encode(character.character_id),
       name: character.name,
       alias: character.alias,
@@ -80,6 +105,7 @@ const loadScenesForScenario = async (scenarioId: number): Promise<Scene[]> => {
       `;
       return {
         id: hashIds.encode(scene.id),
+        characters: await loadCharacterIdMapping(scene.id),
         type: "image-text",
         background: scene.background,
         chats: scene.chat ? [
@@ -148,11 +174,12 @@ const loadChatForChatId = async (chatId: number): Promise<{
   modelApiToken: string,
   modelName: string,
   modelPrompt: string,
+  characterId: string,
   chatConfig: object,
 }> => {
   const chat = await sql`
     SELECT
-      m.name, m.api_url, m.api_key, m.name, sc.chat_prompt, sc.chat_config
+      m.name, m.api_url, m.api_key, m.name, sc.chat_prompt, sc.chat_config, sc,character_id
     FROM
       scene_character AS sc
     LEFT JOIN
@@ -168,6 +195,7 @@ const loadChatForChatId = async (chatId: number): Promise<{
     modelApiToken: chat[0].api_key,
     modelName: chat[0].name,
     modelPrompt: chat[0].chat_prompt,
+    characterId: hashIds.encode(chat[0].character_id),
     chatConfig: chat[0].chat_config,
   }
 }
@@ -177,6 +205,6 @@ export {
   loadScenarioList,
   loadScenesForScenario,
   loadConversationForScene,
-  loadCharacterMapping,
+  loadCharacterNameMapping as loadCharacterMapping,
   loadChatForChatId,
 };
