@@ -45,6 +45,7 @@ export const scenarioReducer = (state: ScenarioState, action: ScenarioAction): S
         objectives: [],
       }
     case "SWITCH_SCENE":
+      console.log("Moving to scene", action.sceneIndex);
       return {
         ...state,
         currentSceneIndex: action.sceneIndex,

@@ -11,10 +11,12 @@ import { getBackgroundImage } from "@/lib/helper";
 import { ApiChatResponse, ImageTextScene } from "@/lib/types";
 import { useScenario } from "@/lib/scenario-provider";
 import ObjectiveList from "../ObjectiveList/objective-list";
+import NextSceneButton from "../NextSceneButton/next-scene-button";
 
 export default function Chat({ currentScene }: { currentScene: ImageTextScene }) {
   const { nextScene, jumpToScene, markObjectiveCompleted, objectives } = useScenario();
   const [showMoreRecords, setShowMoreRecords] = useState(false);
+  const [finished, setFinished] = useState(false);
   const [lastMessage, setLastMessage] = useState("");
   const [records, setRecords] = useState<ChatRecord[]>([]);
   const [lastReply, setLastReply] = useState({
@@ -64,6 +66,9 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
 
   useEffect(() => {
     let allCompleted = true;
+    if (objectives.length === 0) {
+      return;
+    }
     objectives.forEach(objective => {
       if (!objective.completed) {
         allCompleted = false;
@@ -71,7 +76,7 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
     });
     if (allCompleted) {
       console.log("[action] All objectives completed, jumping to next scene");
-      nextScene();
+      setFinished(true);
     }
   }, [nextScene, objectives]);
 
@@ -101,11 +106,17 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
               !showMoreRecords && <ReplyMessageBox reply={lastReply} characterId={currentScene.chats[0].character.id} />
             }
           </div>
-          <div className="flex w-full">
-            <button onClick={() => {
-              setShowMoreRecords(!showMoreRecords);
-            }} className="ml-auto w-[122px] h-[34px] rounded-[50px] bg-[rgba(255,255,255,0.7)]">
-              <span className="font-normal text-[#666666] text-[16px]">More&nbsp;Records</span>
+          <div key="show-more" className="flex w-full justify-end space-x-2">
+            {
+              finished && <NextSceneButton />
+            }
+            <button className="w-[122px] h-[34px] rounded-[50px] bg-[rgba(255,255,255,0.7)]" onClick={() => setShowMoreRecords(!showMoreRecords)}>
+              <span className="font-normal text-[#666666] text-[16px]">
+                {
+                  showMoreRecords ? "Less" : "More"
+                }
+                &nbsp;Records
+              </span>
             </button>
           </div>
           <AnimatePresence mode="wait">

@@ -67,7 +67,11 @@ export function ScenarioProvider({ children }: { children?: ReactNode }) {
 
   const nextScene = useCallback(() => {
     const targetSceneIndex = state.currentSceneIndex + 1;
-    if (targetSceneIndex == state.scenario?.scenes.length) {
+    console.log("Next scene", targetSceneIndex);
+    if (!state.scenario) {
+      return;
+    }
+    if (targetSceneIndex >= state.scenario.scenes.length) {
       dispatch({ type: "SWITCH_SCENE", objectives: [], sceneIndex: targetSceneIndex });
       return;
     }
@@ -79,10 +83,11 @@ export function ScenarioProvider({ children }: { children?: ReactNode }) {
     loadObjective(nextSceneId).then((objectives) => {
       dispatch({ type: "SWITCH_SCENE", objectives, sceneIndex: targetSceneIndex });
     });
-  }, [loadObjective, state.currentSceneIndex, state.scenario?.scenes]);
+  }, [loadObjective, state.currentSceneIndex, state.scenario]);
 
   const jumpToScene = useCallback((targetSceneIndex: number) => {
     const targetSceneId = state.scenario?.scenes[targetSceneIndex].id;
+    console.log("Jump to scene", targetSceneIndex);
     if (!targetSceneId) {
       console.error("Jump to scene failed: target scene id not found");
       return;

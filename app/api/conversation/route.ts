@@ -14,7 +14,7 @@ async function loadConversation(sceneId: string): Promise<Conversation> {
     sentences: conversation.map((chat): ConversationContent => {
       console.log("Speaker", chat.speaker);
       return {
-        speaker: characterMapping[chat.speaker].id ?? chat.speaker,
+        speaker: characterMapping[chat.speaker]?.id ?? chat.speaker,
         content: chat.content,
         image_override: chat.image_override
       }

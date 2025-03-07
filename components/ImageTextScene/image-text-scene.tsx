@@ -125,38 +125,41 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
   return (
     <div className={`image-text-scene w-full h-full flex flex-col-reverse bg-cover`} style={{
       backgroundImage: state.backgroundImage
-    }}>
-      <div className="flex flex-row mx-auto">
-        <div className="w-[20rem] flex-grow-0 mt-auto mb-10" id="left-character">
-          {
-            state.leftImageUrl === "" ?
-              <div></div>
-              :
-              getImageComponent(state.leftImageUrl, state.currentImage === "left")
-          }
-        </div>
-        <div className={`w-[34rem] mt-auto p-10`} onClick={() => { nextSentence() }}>
-          <div className="border-1 border-black bg-slate-400 p-1 select-none">
+    }} onClick={() => { nextSentence() }}>
+      {
+        state.conversation.sentences.length !== 0 &&
+        <div className="flex flex-row mx-auto">
+          <div className="w-[20rem] flex-grow-0 mt-auto mb-10" id="left-character">
             {
-              loading ? "Loading..." :
-                state.conversation.characters.find(character => {
-                  return character.id === (state.currentSentence ?? { speaker: "" }).speaker
-                })?.name ?? state.currentSentence?.speaker ?? "No Name"
+              state.leftImageUrl === "" ?
+                <div></div>
+                :
+                getImageComponent(state.leftImageUrl, state.currentImage === "left")
             }
           </div>
-          <div className="border-1 border-black bg-slate-300 p-3 select-none">
-            {getCurrentConversation()?.content}
+          <div className={`w-[34rem] mt-auto p-10`} >
+            <div className="border-1 border-black bg-slate-400 p-1 select-none">
+              {
+                loading ? "Loading..." :
+                  state.conversation.characters.find(character => {
+                    return character.id === (state.currentSentence ?? { speaker: "" }).speaker
+                  })?.name ?? state.currentSentence?.speaker ?? "No Name"
+              }
+            </div>
+            <div className="border-1 border-black bg-slate-300 p-3 select-none">
+              {getCurrentConversation()?.content}
+            </div>
+          </div>
+          <div className="w-[20rem] flex-grow-0 mt-auto mb-10" id="right-character">
+            {
+              state.rightImageUrl === "" ?
+                <div></div>
+                :
+                getImageComponent(state.rightImageUrl, state.currentImage === "right")
+            }
           </div>
         </div>
-        <div className="w-[20rem] flex-grow-0 mt-auto mb-10" id="right-character">
-          {
-            state.rightImageUrl === "" ?
-              <div></div>
-              :
-              getImageComponent(state.rightImageUrl, state.currentImage === "right")
-          }
-        </div>
-      </div>
+      }
     </div>
   )
 }
