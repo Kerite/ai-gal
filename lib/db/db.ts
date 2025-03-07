@@ -1,15 +1,15 @@
 import postgres from "postgres";
-import { Character, ConversationContent, Scene } from "./types";
 import Hashids from "hashids";
-import { extractConversation } from "./conversation-utils";
+
+import { ConversationContent, Scene, ObjectiveDef } from "../types";
+import { extractConversation } from "../conversation-utils";
+import { CharacterNameMapping } from "./types";
+
 const sql = postgres(process.env.DATABASE_DATABASE_URL!, { ssl: 'verify-full' });
-const hashIds = new Hashids(process.env.HASHIDS_SALT, 6);
 
-interface CharacterMapping {
-  [conversationDisplayedName: string]: Character;
-}
+export const hashIds = new Hashids(process.env.HASHIDS_SALT, 6);
 
-const loadCharacterNameMapping = async (sceneId: number): Promise<CharacterMapping> => {
+export const loadCharacterNameMapping = async (sceneId: number): Promise<CharacterNameMapping> => {
   const sceneCharacters = await sql`
     SELECT
       sc.name AS scene_character_name, sc.character_id, c.name, c.alias, c.image
@@ -21,7 +21,7 @@ const loadCharacterNameMapping = async (sceneId: number): Promise<CharacterMappi
       sc.character_id = c.id
     WHERE
       scene_id = ${sceneId}`;
-  const characterMapping: CharacterMapping = {};
+  const characterMapping: CharacterNameMapping = {};
   sceneCharacters.forEach(character => {
     characterMapping[character.scene_character_name] = {
       id: hashIds.encode(character.character_id),
@@ -30,11 +30,11 @@ const loadCharacterNameMapping = async (sceneId: number): Promise<CharacterMappi
       image: character.image
     };
   });
-  console.log("Character mapping", characterMapping);
+  console.log("Character name mapping:", characterMapping);
   return characterMapping;
 }
 
-const loadCharacterIdMapping = async (sceneId: number): Promise<CharacterMapping> => {
+export const loadCharacterIdMapping = async (sceneId: number): Promise<CharacterNameMapping> => {
   const sceneCharacters = await sql`
     SELECT
       sc.name AS scene_character_name, sc.character_id, c.name, c.alias, c.image
@@ -46,7 +46,7 @@ const loadCharacterIdMapping = async (sceneId: number): Promise<CharacterMapping
       sc.character_id = c.id
     WHERE
       scene_id = ${sceneId}`;
-  const characterMapping: CharacterMapping = {};
+  const characterMapping: CharacterNameMapping = {};
   sceneCharacters.forEach(character => {
     characterMapping[hashIds.encode(character.character_id)] = {
       id: hashIds.encode(character.character_id),
@@ -59,7 +59,7 @@ const loadCharacterIdMapping = async (sceneId: number): Promise<CharacterMapping
   return characterMapping;
 }
 
-const loadScenarioList = async () => {
+export const loadScenarioList = async () => {
   const scenariosPromise = sql`SELECT id, image, name, description FROM scenarios`;
   const scenarios = await scenariosPromise;
   return scenarios.map(scenario => ({
@@ -70,7 +70,7 @@ const loadScenarioList = async () => {
   }));
 }
 
-const loadScenesForScenario = async (scenarioId: number): Promise<Scene[]> => {
+export const loadScenesForScenario = async (scenarioId: number): Promise<Scene[]> => {
   const scenes = await sql`
     SELECT
       s.id,
@@ -127,7 +127,7 @@ const loadScenesForScenario = async (scenarioId: number): Promise<Scene[]> => {
   }));
 }
 
-const loadConversationForScene = async (sceneId: number): Promise<ConversationContent[]> => {
+export const loadConversationForScene = async (sceneId: number): Promise<ConversationContent[]> => {
   const rawConversation = await sql`
     SELECT
       s.conversation_raw
@@ -169,24 +169,30 @@ const loadConversationForScene = async (sceneId: number): Promise<ConversationCo
   }));
 }
 
-const loadChatForChatId = async (chatId: number): Promise<{
+/**
+ * Get chat info for a given chat ID
+ * @param chatId scene_character.id
+ * @returns 
+ */
+export const loadChatForChatId = async (chatId: number): Promise<{
   modelApi: string,
   modelApiToken: string,
   modelName: string,
   modelPrompt: string,
   characterId: string,
+  sceneId: number,
   chatConfig: object,
 }> => {
   const chat = await sql`
     SELECT
-      m.name, m.api_url, m.api_key, m.name, sc.chat_prompt, sc.chat_config, sc,character_id
+      m.name, m.api_url, m.api_key, m.name, sc.chat_prompt, sc.chat_config, sc.character_id, sc.scene_id
     FROM
       scene_character AS sc
     LEFT JOIN
       models AS m ON sc.model_id = m.id
     WHERE
       sc.id = ${Number(chatId.valueOf())}
-    `
+    `;
   if (chat.length === 0) {
     throw new Error(`Chat ID ${chat} not found`);
   }
@@ -196,15 +202,32 @@ const loadChatForChatId = async (chatId: number): Promise<{
     modelName: chat[0].name,
     modelPrompt: chat[0].chat_prompt,
     characterId: hashIds.encode(chat[0].character_id),
+    sceneId: chat[0].scene_id,
     chatConfig: chat[0].chat_config,
   }
 }
 
-export {
-  hashIds,
-  loadScenarioList,
-  loadScenesForScenario,
-  loadConversationForScene,
-  loadCharacterNameMapping as loadCharacterMapping,
-  loadChatForChatId,
-};
+export const loadObjectiveForScene = async (sceneId: number): Promise<ObjectiveDef[]> => {
+  console.log("Loading objectives for scene", sceneId);
+  const objectives = await sql`
+    SELECT
+      id, description, trigger_regex, actions, reply
+    FROM
+      objectives
+    WHERE
+      scene_id = ${sceneId}
+  `
+  if (objectives.length === 0) {
+    console.log("No objectives found for scene", sceneId);
+  } else {
+    console.log("Objectives found for scene", sceneId, objectives);
+  }
+
+  return objectives.map(objective => ({
+    id: hashIds.encode(objective.id),
+    description: objective.description,
+    triggerExpression: objective.trigger_regex,
+    actions: objective.actions,
+    reply: objective.reply,
+  }));
+}

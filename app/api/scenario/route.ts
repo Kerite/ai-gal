@@ -1,6 +1,6 @@
 import { Scenario } from "@/lib/types";
 import { NextRequest } from "next/server";
-import { loadScenesForScenario, hashIds } from "@/lib/db";
+import { loadScenesForScenario, hashIds } from "@/lib/db/db";
 
 async function getScenario(scenarioId: string): Promise<Scenario> {
   const scenes = await loadScenesForScenario(Number(hashIds.decode(scenarioId)[0].valueOf()));

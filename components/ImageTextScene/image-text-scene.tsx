@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import Image, { getImageProps } from "next/image";
 import { getBackgroundImage } from "@/lib/helper";
 import { useScenario } from "@/lib/scenario-provider";
@@ -18,7 +18,7 @@ interface ImageTextSceneState {
 }
 
 type ImageTextSceneAction = { type: "NEXT_SENTENCE" }
-  | { type: "REFRESH_SCENE", scene: ImageTextSceneDef, conversation: Conversation };
+  | { type: "UPDATE_SCENE", scene: ImageTextSceneDef, conversation: Conversation };
 
 function imageTextSceneReducer(state: ImageTextSceneState, action: ImageTextSceneAction): ImageTextSceneState {
   switch (action.type) {
@@ -44,7 +44,7 @@ function imageTextSceneReducer(state: ImageTextSceneState, action: ImageTextScen
           return newState;
         }
       }
-    case "REFRESH_SCENE":
+    case "UPDATE_SCENE":
       const newState: ImageTextSceneState = {
         backgroundImage: getBackgroundImage(getImageProps({
           src: action.scene.background[0] ?? "",
@@ -67,6 +67,7 @@ function imageTextSceneReducer(state: ImageTextSceneState, action: ImageTextScen
 }
 
 export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
+  const [loading, setLoading] = useState(true);
   const [state, dispatch] = useReducer(imageTextSceneReducer, {
     backgroundImage: getBackgroundImage(getImageProps({
       src: scene.background[0] ?? "",
@@ -92,14 +93,15 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
         const res = await fetch(`/api/conversation?id=${scene.conversation}`);
         const data = await res.json();
         if (res.ok) {
-          dispatch({ type: "REFRESH_SCENE", scene, conversation: data });
+          dispatch({ type: "UPDATE_SCENE", scene, conversation: data });
         } else {
           console.error("Failed to fetch conversation", res.statusText);
         }
       }
     };
-    fetchData();
-  }, [scene])
+    setLoading(true);
+    fetchData().then(() => setLoading(false));
+  }, [scene]);
 
   const getCurrentConversation = useCallback(() => {
     return state.conversation.sentences[state.currentSentenceIndex];
@@ -112,6 +114,14 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
     }
   }
 
+  const getImageComponent = (imageUrl: string, isCurrent: boolean) => {
+    return (
+      <div className={isCurrent ? "border-2 border-black" : ""}>
+        <Image className="select-none" src={imageUrl} width={400} height={600} alt="Character" />
+      </div>
+    );
+  }
+
   return (
     <div className={`image-text-scene w-full h-full flex flex-col-reverse bg-cover`} style={{
       backgroundImage: state.backgroundImage
@@ -122,17 +132,16 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
             state.leftImageUrl === "" ?
               <div></div>
               :
-              <div className={state.currentImage === "left" ? "border-2 border-black" : ""}>
-                <Image src={state.leftImageUrl} width={400} height={600} alt="Left Character" />
-              </div>
+              getImageComponent(state.leftImageUrl, state.currentImage === "left")
           }
         </div>
         <div className={`w-[34rem] mt-auto p-10`} onClick={() => { nextSentence() }}>
           <div className="border-1 border-black bg-slate-400 p-1 select-none">
             {
-              state.conversation.characters.find(character => {
-                return character.id === (state.currentSentence ?? { speaker: "" }).speaker
-              })?.name ?? state.currentSentence?.speaker ?? "No Name"
+              loading ? "Loading..." :
+                state.conversation.characters.find(character => {
+                  return character.id === (state.currentSentence ?? { speaker: "" }).speaker
+                })?.name ?? state.currentSentence?.speaker ?? "No Name"
             }
           </div>
           <div className="border-1 border-black bg-slate-300 p-3 select-none">
@@ -144,9 +153,7 @@ export function ImageTextScene({ scene }: { scene: ImageTextSceneDef }) {
             state.rightImageUrl === "" ?
               <div></div>
               :
-              <div className={state.currentImage === "right" ? "border-2 border-black" : ""}>
-                <Image src={state.rightImageUrl} width={400} height={600} alt="Right Character" />
-              </div>
+              getImageComponent(state.rightImageUrl, state.currentImage === "right")
           }
         </div>
       </div>

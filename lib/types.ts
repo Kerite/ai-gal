@@ -55,10 +55,25 @@ export interface ConversationContent {
   image_override?: string;
 }
 
+export interface SceneObjective {
+  id: string;
+  description: string;
+  completed: boolean;
+}
+
+export interface ObjectiveDef {
+  id: string;
+  description: string;
+  triggerExpression: string;
+  actions: string[];
+  reply: string;
+}
+
 export interface ApiChatResponse {
   data: {
     characterId: string;
     reply: string;
     translation: string;
+    actions: string[];
   }
 }

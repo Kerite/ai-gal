@@ -1,4 +1,4 @@
-import { hashIds, loadChatForChatId } from "@/lib/db";
+import { hashIds, loadChatForChatId, loadObjectiveForScene } from "@/lib/db/db";
 import { NextRequest } from "next/server"
 
 const encoder = new TextEncoder();
@@ -15,6 +15,7 @@ function truncate(q: string) {
 async function callOpenAiApi(chatId: string, message: string): Promise<{
   characterId: string;
   aiMessage: string;
+  actions: string[];
 }> {
   if (!hashIds.isValidId(chatId)) {
     throw new Error(`Invalid chat ID: ${chatId}`);
@@ -23,7 +24,32 @@ async function callOpenAiApi(chatId: string, message: string): Promise<{
   console.log(`Real Chat ID: ${realChatId}`);
   const chatInfo = await loadChatForChatId(Number(realChatId.valueOf()));
 
-  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+  const sceneId = chatInfo.sceneId;
+  console.log("Scene ID:", sceneId);
+
+  const objectives = await loadObjectiveForScene(sceneId);
+  console.log("Objectives:", objectives);
+
+  for (const objective of objectives) {
+    const regex = new RegExp(objective.triggerExpression, 'i');
+    if (regex.test(message)) {
+      console.log("Matched objective (Regex):", objective);
+      return {
+        characterId: chatInfo.characterId,
+        aiMessage: objective.reply,
+        actions: ["complete-objective " + objective.id, ...objective.actions],
+      };
+    } else if (message.includes(objective.triggerExpression)) {
+      console.log("Matched objective (Full match):", objective);
+      return {
+        characterId: chatInfo.characterId,
+        aiMessage: objective.reply,
+        actions: ["complete-objective " + objective.id, ...objective.actions],
+      };
+    }
+  }
+
+  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
   const headers = new Headers();
   headers.set("Content-Type", "application/json");
   headers.set("Authorization", `Bearer ${chatInfo.modelApiToken}`);
@@ -43,7 +69,7 @@ async function callOpenAiApi(chatId: string, message: string): Promise<{
     ]
   });
   console.log("Chat info", chatInfo)
-  console.log("Apibody", apiBody);
+  console.log("Calling API:", apiUrl, "Body:", apiBody);
 
   const reply = await fetch(apiUrl, {
     method: 'POST',
@@ -58,7 +84,8 @@ async function callOpenAiApi(chatId: string, message: string): Promise<{
   console.log(`Reply(${reply.status}):`, JSON.stringify(replyContent.choices[0].message), null, 2);
   return {
     characterId: chatInfo.characterId,
-    aiMessage: replyContent.choices[0].message.content
+    aiMessage: replyContent.choices[0].message.content,
+    actions: [],
   };
 }
 
@@ -67,48 +94,67 @@ export async function POST(request: NextRequest) {
 
   console.log("User sent:", message);
 
-  const { characterId, aiMessage } = await callOpenAiApi(chatId, message);
-  const response = message.indexOf("</think>") > 0 ? message.substring(message.indexOf("</think>") + 8).trim()
-    .replaceAll(/\(.*?\)/g, '')
-    .replaceAll(/（.*?）/g, '')
-    .replaceAll("\n", "<br>") : aiMessage;
-
-  console.log(`AI response: ${response}`);
-  const salt = crypto.randomUUID();
-  const curtime = Math.floor(Date.now() / 1000);
-  const rawSign = `${process.env.TRANSLATE_APP_ID}${truncate(response)}${salt}${curtime}${process.env.TRANSLATE_API_KEY}`;
-  const sign = await crypto.subtle.digest("SHA-256", encoder.encode(rawSign));
-  const signStr = Array.from(new Uint8Array(sign)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-  const formData = new FormData();
-  formData.append("q", response);
-  formData.append("from", "auto");
-  formData.append("to", "zh-CHS");
-  formData.append("appKey", `${process.env.TRANSLATE_APP_ID}`);
-  formData.append("salt", salt);
-  formData.append("sign", signStr);
-  formData.append("signType", "v3");
-  formData.append("curtime", curtime.toString());
-
-  const data = await fetch("https://openapi.youdao.com/api", {
-    method: "POST",
-    body: formData
-  });
-
-  const translationResponse = await data.json();
-
-  let translatedText = "";
-  if (translationResponse.translation) {
-    translatedText = translationResponse.translation[0]
-  } else {
-    console.log("Tranlation API Error", translationResponse);
+  if (!hashIds.isValidId(chatId)) {
+    return Response.json({
+      message: "error",
+      error: `Invalid chat ID: ${chatId}`,
+    }, {
+      status: 400,
+    });
   }
-  return Response.json({
-    message: "success",
-    data: {
-      characterId,
-      reply: response.replaceAll("<br>", "\n"),
-      translation: translatedText.replaceAll("<br>", "\n"),
+
+  try {
+    const { characterId, aiMessage, actions } = await callOpenAiApi(chatId, message);
+    const response = message.indexOf("</think>") > 0 ? message.substring(message.indexOf("</think>") + 8).trim()
+      .replaceAll(/\(.*?\)/g, '')
+      .replaceAll(/（.*?）/g, '')
+      .replaceAll("\n", "<br>") : aiMessage;
+
+    console.log(`AI response: ${response}`);
+    const salt = crypto.randomUUID();
+    const curtime = Math.floor(Date.now() / 1000);
+    const rawSign = `${process.env.TRANSLATE_APP_ID}${truncate(response)}${salt}${curtime}${process.env.TRANSLATE_API_KEY}`;
+    const sign = await crypto.subtle.digest("SHA-256", encoder.encode(rawSign));
+    const signStr = Array.from(new Uint8Array(sign)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const formData = new FormData();
+    formData.append("q", response);
+    formData.append("from", "auto");
+    formData.append("to", "zh-CHS");
+    formData.append("appKey", `${process.env.TRANSLATE_APP_ID}`);
+    formData.append("salt", salt);
+    formData.append("sign", signStr);
+    formData.append("signType", "v3");
+    formData.append("curtime", curtime.toString());
+
+    const data = await fetch("https://openapi.youdao.com/api", {
+      method: "POST",
+      body: formData
+    });
+
+    const translationResponse = await data.json();
+
+    let translatedText = "";
+    if (translationResponse.translation) {
+      translatedText = translationResponse.translation[0]
+    } else {
+      console.log("Tranlation API Error", translationResponse);
     }
-  })
+    return Response.json({
+      message: "success",
+      data: {
+        characterId,
+        reply: response.replaceAll("<br>", "\n"),
+        translation: translatedText.replaceAll("<br>", "\n"),
+        actions
+      }
+    })
+  } catch (e) {
+    return Response.json({
+      message: "error",
+      error: JSON.stringify(e),
+    }, {
+      status: 500,
+    });
+  }
 }

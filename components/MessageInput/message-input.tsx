@@ -20,7 +20,7 @@ export function MessageInput({ onSend }: MessageInputProps) {
           }
         }} className="ml-[40px] flex-grow focus:outline-none" value={message} onChange={(e) => setMessage(e.target.value)} />
         <button className="aspect-square bg-[#26C6C6] rounded-full m-[8px]" onClick={() => onSend?.(message)}>
-          <Image src={SendIcon} alt="SendMessage" className="m-auto" />
+          <Image  src={SendIcon} alt="SendMessage" className="m-auto select-none" />
         </button>
       </div>
     </div>
