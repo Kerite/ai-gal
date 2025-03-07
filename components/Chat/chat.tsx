@@ -13,7 +13,7 @@ import { useScenario } from "@/lib/scenario-provider";
 import ObjectiveList from "../ObjectiveList/objective-list";
 
 export default function Chat({ currentScene }: { currentScene: ImageTextScene }) {
-  const { nextScene, jumpToScene, markObjectiveCompleted } = useScenario();
+  const { nextScene, jumpToScene, markObjectiveCompleted, objectives } = useScenario();
   const [showMoreRecords, setShowMoreRecords] = useState(false);
   const [lastMessage, setLastMessage] = useState("");
   const [records, setRecords] = useState<ChatRecord[]>([]);
@@ -36,7 +36,7 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
     console.log(`User sent: ${message}`);
     const { data }: ApiChatResponse = await response.json();
     console.log(data);
-    if (data.actions.length != 0) {
+    if (data.actions.length !== 0) {
       console.log("[action] Objective completed:", data.actions[0]);
       if (data.actions[0].startsWith("complete-objective")) {
         const objectiveId = data.actions[0].split(" ")[1];
@@ -52,8 +52,6 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
         console.log("[action] Next scene");
         nextScene();
         return;
-      } else if (data.actions[0].startsWith("")) {
-
       }
     }
     setRecords([
@@ -65,10 +63,17 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
   }
 
   useEffect(() => {
-    if (records.length > 5) {
+    let allCompleted = true;
+    objectives.forEach(objective => {
+      if (!objective.completed) {
+        allCompleted = false;
+      }
+    });
+    if (allCompleted) {
+      console.log("[action] All objectives completed, jumping to next scene");
       nextScene();
     }
-  }, [records, nextScene]);
+  }, [nextScene, objectives]);
 
   return (
     <div className="h-full w-full bg-cover bg-center bg-no-repeat relative" style={{
@@ -79,7 +84,7 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
         alt: "Background Image"
       }).props.srcSet)
     }} id="chat-root">
-      <div id="objectives-container" className="absolute left-3 top-3 z-10" >
+      <div id="objectives-container" className="absolute left-3 top-3 z-10">
         <ObjectiveList />
       </div>
       <div className="flex flex-row justify-center items-start w-full max-h-screen overflow-hidden" id="chat-container">

@@ -12,7 +12,7 @@ const emptyScenario: Scenario = {
 const initialState: ScenarioState = {
   scenario: emptyScenario,
   currentSceneIndex: 0,
-  objectives: []
+  objectives: [],
 }
 
 export interface ScenarioContextInterface extends ScenarioState {
@@ -67,6 +67,10 @@ export function ScenarioProvider({ children }: { children?: ReactNode }) {
 
   const nextScene = useCallback(() => {
     const targetSceneIndex = state.currentSceneIndex + 1;
+    if (targetSceneIndex == state.scenario?.scenes.length) {
+      dispatch({ type: "SWITCH_SCENE", objectives: [], sceneIndex: targetSceneIndex });
+      return;
+    }
     const nextSceneId = state.scenario?.scenes[targetSceneIndex]?.id;
     if (!nextSceneId) {
       console.error("Next scene failed: next scene id not found");

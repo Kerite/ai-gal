@@ -14,6 +14,7 @@ type ScenarioAction = { type: "NEW_SCENARIO", scenario: Scenario }
   | { type: "NEXT_SCENE", objectives: Objective[] }
   | { type: "LOAD_ERROR", message: string }
   | { type: "COMPLETE_OBJECTIVE", objectiveId: string }
+  | { type: "FINISH_SCENARIO" }
 
 export const scenarioReducer = (state: ScenarioState, action: ScenarioAction): ScenarioState => {
   switch (action.type) {
@@ -70,6 +71,12 @@ export const scenarioReducer = (state: ScenarioState, action: ScenarioAction): S
           }
           return obj
         }),
+      }
+    case "FINISH_SCENARIO":
+      return {
+        ...state,
+        scenario: undefined,
+        currentSceneIndex: -1,
       }
   }
 }
