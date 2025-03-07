@@ -58,6 +58,12 @@ export interface ConversationContent {
 export interface SceneObjective {
   id: string;
   description: string;
+  completed: boolean;
+}
+
+export interface ObjectiveDef {
+  id: string;
+  description: string;
   triggerExpression: string;
   actions: string[];
   reply: string;

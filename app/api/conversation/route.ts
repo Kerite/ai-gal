@@ -1,13 +1,13 @@
 import { Conversation, ConversationContent } from "@/lib/types";
 import { NextRequest } from "next/server";
-import { hashIds, loadCharacterMapping, loadConversationForScene } from "@/lib/db";
+import { hashIds, loadCharacterNameMapping, loadConversationForScene } from "@/lib/db/db";
 
 async function loadConversation(sceneId: string): Promise<Conversation> {
   const realSceneId = Number(hashIds.decode(sceneId)[0]?.valueOf());
   console.log("Loading conversation for scene", realSceneId);
 
   const conversation = await loadConversationForScene(realSceneId);
-  const characterMapping = await loadCharacterMapping(realSceneId);
+  const characterMapping = await loadCharacterNameMapping(realSceneId);
 
   return {
     characters: Object.values(characterMapping),

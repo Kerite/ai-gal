@@ -10,9 +10,10 @@ import { ReplyMessageBox } from "@/components/ReplyMessageBox/reply-message-box"
 import { getBackgroundImage } from "@/lib/helper";
 import { ApiChatResponse, ImageTextScene } from "@/lib/types";
 import { useScenario } from "@/lib/scenario-provider";
+import ObjectiveList from "../ObjectiveList/objective-list";
 
 export default function Chat({ currentScene }: { currentScene: ImageTextScene }) {
-  const { nextScene, jumpToScene } = useScenario();
+  const { nextScene, jumpToScene, markObjectiveCompleted } = useScenario();
   const [showMoreRecords, setShowMoreRecords] = useState(false);
   const [lastMessage, setLastMessage] = useState("");
   const [records, setRecords] = useState<ChatRecord[]>([]);
@@ -35,17 +36,25 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
     console.log(`User sent: ${message}`);
     const { data }: ApiChatResponse = await response.json();
     console.log(data);
-    if (data.actions[0].startsWith("jump-scene")) {
-      const targetScene = data.actions[0].split(" ")[1];
-      console.log("[action] Jump to scene:", targetScene);
-      jumpToScene(Number(targetScene));
-      return;
-    } else if (data.actions[0].startsWith("next-scene")) {
-      console.log("[action] Next scene");
-      nextScene();
-      return;
-    } else if (data.actions[0].startsWith("")) {
-      
+    if (data.actions.length != 0) {
+      console.log("[action] Objective completed:", data.actions[0]);
+      if (data.actions[0].startsWith("complete-objective")) {
+        const objectiveId = data.actions[0].split(" ")[1];
+        console.log("[action] Complete objective:", objectiveId);
+        markObjectiveCompleted(objectiveId);
+      }
+      if (data.actions[0].startsWith("jump-scene")) {
+        const targetScene = data.actions[0].split(" ")[1];
+        console.log("[action] Jump to scene:", targetScene);
+        jumpToScene(Number(targetScene));
+        return;
+      } else if (data.actions[0].startsWith("next-scene")) {
+        console.log("[action] Next scene");
+        nextScene();
+        return;
+      } else if (data.actions[0].startsWith("")) {
+
+      }
     }
     setRecords([
       ...records,
@@ -62,17 +71,20 @@ export default function Chat({ currentScene }: { currentScene: ImageTextScene })
   }, [records, nextScene]);
 
   return (
-    <div className="h-full w-full bg-cover bg-center bg-no-repeat flex" style={{
+    <div className="h-full w-full bg-cover bg-center bg-no-repeat relative" style={{
       backgroundImage: getBackgroundImage(getImageProps({
         height: 1080,
         width: 1920,
         src: currentScene.background[0] ?? "",
         alt: "Background Image"
       }).props.srcSet)
-    }}>
-      <div className="flex-row flex left-0 right-0 max-h-screen overflow-hidden mx-auto" id="chat-container">
+    }} id="chat-root">
+      <div id="objectives-container" className="absolute left-3 top-3 z-10" >
+        <ObjectiveList />
+      </div>
+      <div className="flex flex-row justify-center items-start w-full max-h-screen overflow-hidden" id="chat-container">
         <div className="w-[24rem] m-10">
-          <Image className="w-[24rem]"
+          <Image className="w-[24rem] select-none"
             src={currentScene.chats[0].character.image}
             alt="character"
             width={565}

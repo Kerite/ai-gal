@@ -1,6 +1,5 @@
-import { hashIds, loadChatForChatId, loadObjectiveForScene } from "@/lib/db";
+import { hashIds, loadChatForChatId, loadObjectiveForScene } from "@/lib/db/db";
 import { NextRequest } from "next/server"
-import { isRegExp } from "util/types";
 
 const encoder = new TextEncoder();
 
@@ -32,16 +31,21 @@ async function callOpenAiApi(chatId: string, message: string): Promise<{
   console.log("Objectives:", objectives);
 
   for (const objective of objectives) {
-    console.log("Processing objective:", objective);
-    if (isRegExp(objective.triggerExpression)) {
-      if (message.match(objective.triggerExpression)) {
-        console.log("Matched objective:", objective);
-        return {
-          characterId: chatInfo.characterId,
-          aiMessage: objective.reply,
-          actions: objective.actions,
-        };
-      }
+    const regex = new RegExp(objective.triggerExpression, 'i');
+    if (regex.test(message)) {
+      console.log("Matched objective (Regex):", objective);
+      return {
+        characterId: chatInfo.characterId,
+        aiMessage: objective.reply,
+        actions: ["complete-objective " + objective.id, ...objective.actions],
+      };
+    } else if (message.includes(objective.triggerExpression)) {
+      console.log("Matched objective (Full match):", objective);
+      return {
+        characterId: chatInfo.characterId,
+        aiMessage: objective.reply,
+        actions: ["complete-objective " + objective.id, ...objective.actions],
+      };
     }
   }
 
@@ -100,11 +104,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const {
-      characterId,
-      aiMessage,
-      actions
-    } = await callOpenAiApi(chatId, message);
+    const { characterId, aiMessage, actions } = await callOpenAiApi(chatId, message);
     const response = message.indexOf("</think>") > 0 ? message.substring(message.indexOf("</think>") + 8).trim()
       .replaceAll(/\(.*?\)/g, '')
       .replaceAll(/（.*?）/g, '')

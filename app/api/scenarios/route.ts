@@ -1,4 +1,4 @@
-import { loadScenarioList } from "@/lib/db";
+import { loadScenarioList } from "@/lib/db/db";
 
 export async function GET() {
   const scenario = await loadScenarioList();
